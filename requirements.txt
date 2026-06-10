@@ -1,0 +1,9 @@
+numpy
+pandas
+scipy
+mne
+mne-connectivity
+statsmodels
+matplotlib
+seaborn
+autoreject
