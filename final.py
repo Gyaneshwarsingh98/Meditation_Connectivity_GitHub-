@@ -1,7 +1,28 @@
-# ============================================================
-# Alpha-band wPLI Functional Connectivity Analysis
-# Final, Frozen Script for Manuscript Results
-# ============================================================
+"""
+Final manuscript analysis script
+
+Paper:
+Phase-Resolved Modulation of Alpha-Band Functional Connectivity During a Multistage Meditation Protocol
+
+This script reproduces the primary analyses reported in the manuscript.
+
+Pipeline:
+1. Restricts analyses to alpha-band (8–12 Hz) weighted Phase Lag Index (wPLI)
+2. Aggregates region-to-region connectivity into predefined lobar network classes
+3. Fits the linear mixed-effects model reported in Table 3
+4. Generates publication figures
+5. Exports coefficient tables and descriptive summaries
+
+Model:
+Connectivity ~ Phase * Group + Network
+Random intercept: Subject
+Estimation: REML
+
+Group abbreviations:
+CG  = Control Group
+STM = Short-Term Meditators
+LTM = Long-Term Meditators
+"""
 
 # -------------------------------
 # 0. Imports
@@ -16,7 +37,7 @@ import statsmodels.formula.api as smf
 # -------------------------------
 # 1. Configuration
 # -------------------------------
-DATA_PATH = "/Users/gyaneshwarsingh/Brain_connectivity/Final_dataset/Brain_connectivity.csv"
+DATA_PATH = "./data/Brain_connectivity.csv"
 
 OUT_DIR = "alpha_wpli_results_2"
 os.makedirs(OUT_DIR, exist_ok=True)
@@ -119,6 +140,7 @@ model_df.to_csv(
 # -------------------------------
 # 7. Linear Mixed-Effects Model
 # -------------------------------
+
 formula = "Connectivity ~ Phase * Group + Network"
 
 lmm = smf.mixedlm(
@@ -276,11 +298,11 @@ ax.set_ylim(0.18, 0.50)
 plt.tight_layout(rect=[0, 0, 0.85, 1])
 
 plt.savefig(
-    os.path.join(FIG_DIR, "Fig2_phase_group_clean.png"),
+    os.path.join(FIG_DIR, "Fig3_phase_group.png"),
     bbox_inches="tight"
 )
 plt.savefig(
-    os.path.join(FIG_DIR, "Fig2_phase_group_clean.pdf"),
+    os.path.join(FIG_DIR, "Fig3_phase_group.pdf"),
     bbox_inches="tight"
 )
 
@@ -339,11 +361,11 @@ ax.set_ylim(0.18, 0.50)
 plt.tight_layout()
 
 plt.savefig(
-    os.path.join(FIG_DIR, "Fig3_network_raincloud.png"),
+    os.path.join(FIG_DIR, "Fig4_network_connectivity.png"),
     bbox_inches="tight"
 )
 plt.savefig(
-    os.path.join(FIG_DIR, "Fig3_network_raincloud.pdf"),
+    os.path.join(FIG_DIR, "Fig4_network_connectivity.pdf"),
     bbox_inches="tight"
 )
 
