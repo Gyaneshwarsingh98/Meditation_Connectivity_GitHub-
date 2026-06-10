@@ -1,33 +1,45 @@
+"""
+Source-space alpha-band connectivity analysis used in:
+
+Phase-Resolved Modulation of Alpha-Band Functional Connectivity During a Multistage Meditation Protocol
+
+Pipeline:
+1. Load preprocessed EEG
+2. Source reconstruction using fsaverage BEM-dSPM
+3. Desikan-Killiany atlas parcellation
+4. Alpha-band (8–12 Hz) weighted Phase Lag Index (wPLI)
+5. Export region-to-region connectivity matrices
+
+Note:
+Only the analyses reported in the manuscript are included in this script.
+"""
+
+
 import os
 import mne
 import numpy as np
 import pandas as pd
 from mne.minimum_norm import apply_inverse_epochs, make_inverse_operator
 from mne_connectivity import spectral_connectivity_epochs
-from mne.time_frequency import psd_array_welch
-from scipy.stats import entropy as scipy_entropy
+
 
 # ---------------------------
 # Configuration
 # ---------------------------
-subjects_dir = '/Users/gyaneshwarsingh/mne_fs_subjects'
-raw_data_dir = '/Users/gyaneshwarsingh/Brain_connectivity/data/control_group/preprocessed/fif_files'
-output_dir = '/Users/gyaneshwarsingh/Brain_connectivity/output_2_CG'
+subjects_dir = "path_to_fsaverage"
+raw_data_dir = "path_to_preprocessed_data"
+output_dir = "path_to_output"
 
 spacing = 'ico5'
 snr = 3.0
 lambda2 = 1.0 / snr ** 2
 epoch_length = 10.0  # seconds
 
-undirected_methods = ['pli', 'wpli', 'coh','imcoh']
-all_methods = undirected_methods + ['ciplv']
+
+all_methods = ['wpli']
 
 bands = {
-    'Delta': (1, 4),
-    'Theta': (4, 8),
     'Alpha': (8, 12),
-    'Beta': (12, 30),
-    'Gamma': (30, 40)
 }
 
 os.makedirs(output_dir, exist_ok=True)
@@ -66,37 +78,11 @@ def process_subject(raw_fname):
     sfreq = raw.info['sfreq']
     n_fft = int(epoch_length * sfreq)
 
-    power_entropy_list = []
+    
     connectivity_data = []
     label_names = [label.name for label in labels]
 
     for band_name, (fmin, fmax) in bands.items():
-        for i, label_name in enumerate(label_names):
-            psds, _ = psd_array_welch(label_ts_array[:, i, :], sfreq=sfreq, fmin=fmin, fmax=fmax, n_fft=n_fft)
-            power = np.mean(psds, axis=1)
-            ent = [scipy_entropy(p / np.sum(p)) for p in psds]
-            for epoch_i in range(len(power)):
-                power_entropy_list.append({
-                    'Subject': base_name,
-                    'Group': group,
-                    'Phase': phase,
-                    'Band': band_name,
-                    'Label': label_name,
-                    'Epoch': epoch_i,
-                    'Metric': 'Power',
-                    'Value': power[epoch_i]
-                })
-                power_entropy_list.append({
-                    'Subject': base_name,
-                    'Group': group,
-                    'Phase': phase,
-                    'Band': band_name,
-                    'Label': label_name,
-                    'Epoch': epoch_i,
-                    'Metric': 'Entropy',
-                    'Value': ent[epoch_i]
-                })
-
         con_results = spectral_connectivity_epochs(label_ts_array, method=all_methods, mode='multitaper',
                                                    sfreq=sfreq, fmin=fmin, fmax=fmax,
                                                    faverage=True, verbose=False)
@@ -106,23 +92,19 @@ def process_subject(raw_fname):
             for i in range(len(labels)):
                 for j in range(len(labels)):
                     if i != j:
-                        connection_type = 'Undirected' if method in undirected_methods else 'Directed'
                         connectivity_data.append({
                             'Subject': base_name,
                             'Group': group,
                             'Phase': phase,
                             'Band': band_name,
                             'Method': method,
-                            'Connection_Type': connection_type,
                             'Label_1': label_names[i],
                             'Label_2': label_names[j],
                             'Value': con_matrix[i, j].item()
                         })
 
-    power_entropy_df = pd.DataFrame(power_entropy_list)
+    
     connectivity_df = pd.DataFrame(connectivity_data)
-
-    power_entropy_df.to_csv(os.path.join(output_dir, f'{base_name}_power_entropy.csv'), index=False)
     connectivity_df.to_csv(os.path.join(output_dir, f'{base_name}_connectivity.csv'), index=False)
     print(f"Saved results for {base_name}")
 
