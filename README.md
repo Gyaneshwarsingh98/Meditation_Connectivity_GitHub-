@@ -110,11 +110,3 @@ Raw EEG data are not publicly available because participant consent and institut
 Analysis scripts and statistical outputs required to reproduce the reported analyses are provided in this repository.
 
 ---
-
-## Citation
-
-If you use this repository, please cite:
-
-Singh G, et al.
-Phase-Resolved Modulation of Alpha-Band Functional Connectivity During a Multistage Meditation Protocol.
-Clinical EEG & Neuroscience.
