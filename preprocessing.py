@@ -1,3 +1,19 @@
+"""
+Preprocessing pipeline for:
+
+Phase-Resolved Modulation of Alpha-Band Functional Connectivity During a Multistage Meditation Protocol
+
+Steps:
+1. Band-pass filtering (0.3–40 Hz)
+2. Notch filtering (60 Hz)
+3. ICA-based artifact correction
+4. RANSAC bad-channel detection
+5. Spherical interpolation
+6. Save preprocessed EEG
+
+Author: Gyaneshwar Singh
+"""
+
 # scripts/01_preprocessing.py
 
 import os
@@ -74,7 +90,7 @@ def apply_ica(raw):
     print("Calculating correlations...")
     correlations = np.corrcoef(ica_sources, frontal_data)[len(ica_sources):, :len(ica_sources)]
 
-    correlation_threshold = 2
+    correlation_threshold = 0.3
     eog_inds = np.where(np.max(np.abs(correlations), axis=0) > correlation_threshold)[0]
 
     print(f"Identified components to exclude: {eog_inds}")
@@ -159,7 +175,7 @@ def process_multiple_files(input_dir, output_dir):
 
 if __name__ == "__main__":
     # Update with your actual paths
-    input_dir = "/Users/gyaneshwarsingh/Brain_connectivity/data/Short_term_meditator"
-    output_dir = "/Users/gyaneshwarsingh/Brain_connectivity/data/Short_term_meditator/preprocessed"
+    input_dir = "path_to_raw_data"
+    output_dir = "path_to_preprocessed_data"
 
     process_multiple_files(input_dir, output_dir)
